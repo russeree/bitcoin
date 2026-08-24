@@ -1,40 +1,40 @@
-Bitcoin Core integration/staging tree
+Bitcoin DOG Mode
 =====================================
 
-https://bitcoincore.org
+Website: Coming Soon
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+For an immediately usable, binary version of the Bitcoin DOG Mode software, see the website.
 
-What is Bitcoin Core?
+What is Bitcoin DOG Mode?
 ---------------------
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
+Bitcoin DOG Mode connects to the Bitcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about Bitcoin DOG Mode is available in the [doc folder](/doc).
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Bitcoin DOG Mode is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/license/MIT.
 
 Development Process
 -------------------
 
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+Development generally takes place as part of [Bitcoin Core](https://github.com/bitcoin/bitcoin), and is merged into
+DOG Mode for each release.
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
+Even if your pull request to Core is closed, or if your feature is not
+suitable for Core (eg, because it builds on a feature not supported in Core;
+relies on centralised services; etc), it may still be eligible for inclusion
+in Bitcoin DOG Mode. In this case, a pull request may be opened on the
+[DOG Mode GitHub](https://github.com/bitcoindogmode/bitcoin) for review and consideration.
+When accepted, you are expected to maintain the submitted branch in your own
+repository, and it will be automatically merged into new releases of Dog Mode.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+Developer IRC can be found on Freenode at #bitcoin-dev.
 
 Testing
 -------
