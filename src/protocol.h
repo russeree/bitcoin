@@ -336,6 +336,13 @@ enum ServiceFlags : uint64_t {
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
+
+    // NODE_DOG_MODE means the node is a $DOG Mode node, implementing $DOG Mode
+    // relay policies. $DOG Mode nodes preferentially peer with each other to
+    // form a relay subnetwork for transactions that are non-standard on the
+    // rest of the network. Modeled on Libre Relay's NODE_LIBRE_RELAY (bit 29);
+    // we use bit 28 so the two peering groups stay distinct.
+    NODE_DOG_MODE = (1 << 28),
 };
 
 /**
@@ -360,6 +367,14 @@ constexpr ServiceFlags SeedsServiceFlags() { return ServiceFlags(NODE_NETWORK | 
 static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
 {
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
+}
+
+/**
+ * Checks if a peer with the given service flags is a $DOG Mode node.
+ */
+static inline bool HasDogModeServiceFlag(ServiceFlags services)
+{
+    return (services & NODE_DOG_MODE);
 }
 
 /** A CService with information about it as peer */

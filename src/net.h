@@ -71,6 +71,8 @@ static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
+/** Maximum number of automatic $DOG Mode peers */
+static const int MAX_DOG_MODE_CONNECTIONS = 4;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
 /** Maximum number of private broadcast connections */
@@ -777,6 +779,7 @@ public:
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::DOG_MODE:
                 return true;
             case ConnectionType::INBOUND:
             case ConnectionType::MANUAL:
@@ -807,6 +810,7 @@ public:
         case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::DOG_MODE:
         case ConnectionType::MANUAL:
                 return true;
         } // no default case, so the compiler can warn about missing cases
@@ -835,6 +839,10 @@ public:
         return m_conn_type == ConnectionType::INBOUND;
     }
 
+    bool IsDogModeConn() const {
+        return m_conn_type == ConnectionType::DOG_MODE;
+    }
+
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
@@ -845,6 +853,7 @@ public:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::PRIVATE_BROADCAST:
+            case ConnectionType::DOG_MODE:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
@@ -1104,6 +1113,7 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        int m_max_outbound_dog_mode = 0;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1114,7 +1124,8 @@ public:
         m_max_automatic_connections = connOptions.m_max_automatic_connections;
         m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
-        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler;
+        m_max_outbound_dog_mode = connOptions.m_max_outbound_dog_mode;
+        m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler + m_max_outbound_dog_mode;
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         m_client_interface = connOptions.uiInterface;
@@ -1678,6 +1689,9 @@ private:
     // How many block-relay only outbound peers we want
     // We do not relay tx or addr messages with these peers
     int m_max_outbound_block_relay;
+
+    // How many $DOG Mode outbound peers we want
+    int m_max_outbound_dog_mode;
 
     int m_max_addnode{MAX_ADDNODE_CONNECTIONS};
     int m_max_feeler{MAX_FEELER_CONNECTIONS};

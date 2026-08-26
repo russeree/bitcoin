@@ -82,6 +82,14 @@ enum class ConnectionType {
      * our own transactions) and closed afterwards.
      */
     PRIVATE_BROADCAST,
+
+    /**
+     * Dog mode connections are long-lived connections to peers advertising
+     * NODE_DOG_MODE, used to relay transactions with the $DOG Mode
+     * standardness policies. We automatically attempt to open
+     * MAX_DOG_MODE_CONNECTIONS using addresses from our AddrMan.
+     */
+    DOG_MODE,
 };
 
 /** Convert ConnectionType enum to a string value */

@@ -125,6 +125,7 @@ constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
     NODE_COMPACT_FILTERS,
     NODE_NETWORK_LIMITED,
     NODE_P2P_V2,
+    NODE_DOG_MODE,
 };
 
 constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
@@ -148,6 +149,7 @@ constexpr ConnectionType ALL_CONNECTION_TYPES[]{
     ConnectionType::BLOCK_RELAY,
     ConnectionType::ADDR_FETCH,
     ConnectionType::PRIVATE_BROADCAST,
+    ConnectionType::DOG_MODE,
 };
 
 constexpr auto ALL_NETWORKS = std::array{

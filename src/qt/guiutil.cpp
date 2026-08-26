@@ -724,6 +724,8 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
     //: Short-lived peer connection type that is used for broadcasting privacy-sensitive data.
     case ConnectionType::PRIVATE_BROADCAST: return prefix + QObject::tr("Private Broadcast");
+    //: Long-lived peer connection type to $DOG Mode peers.
+    case ConnectionType::DOG_MODE: return prefix + QObject::tr("Dog Mode");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

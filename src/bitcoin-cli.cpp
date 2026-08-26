@@ -383,6 +383,7 @@ class NetinfoRequestHandler : public BaseRequestHandler
 private:
     std::array<std::array<uint16_t, NETWORKS.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
+    uint8_t m_dog_peers_count{0};
     uint8_t m_manual_peers_count{0};
     uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level; }
@@ -452,6 +453,7 @@ private:
         if (conn_type == "manual" || conn_type == "feeler") return conn_type;
         if (conn_type == "addr-fetch") return "addr";
         if (conn_type == "private-broadcast") return "priv";
+        if (conn_type == "dog") return "dog";
         return "";
     }
     std::string FormatServices(const UniValue& services)
@@ -530,6 +532,7 @@ public:
             ++m_counts.at(2).at(network_id);                // total by network
             ++m_counts.at(2).at(NETWORKS.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
+            if (conn_type == "dog") ++m_dog_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
             if (m_outbound_only_selected && !is_outbound) continue;
             if (DetailsRequested()) {
@@ -633,6 +636,7 @@ public:
         }
 
         result += "   total   block";
+        if (m_dog_peers_count) result += "   dog";
         if (m_manual_peers_count) result += "  manual";
 
         const std::array rows{"in", "out", "total"};
@@ -642,8 +646,9 @@ public:
                 result += strprintf("%8i", m_counts.at(i).at(n)); // network peers count
             }
             result += strprintf("   %5i", m_counts.at(i).at(NETWORKS.size())); // total peers count
-            if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
+            if (i == 1) { // the outbound row has extra columns for block relay, dog mode and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
+                if (m_dog_peers_count) result += strprintf("   %5i", m_dog_peers_count);
                 if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
             }
         }
@@ -704,6 +709,7 @@ public:
         "           \"feeler\" - short-lived connection for testing addresses\n"
         "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
         "           \"priv\"   - private broadcast; short-lived connection for broadcasting our transactions\n"
+        "           \"dog\"    - $DOG Mode; long-lived connection to a $DOG Mode peer\n"
         "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
         "  serv     Services offered by the peer\n"
         "           \"n\" - NETWORK: peer can serve the full block chain\n"
@@ -712,6 +718,7 @@ public:
         "           \"c\" - COMPACT_FILTERS: peer can handle basic block filter requests (see BIPs 157 and 158)\n"
         "           \"l\" - NETWORK_LIMITED: peer limited to serving only the last 288 blocks (~2 days)\n"
         "           \"2\" - P2P_V2: peer supports version 2 P2P transport protocol, as defined in BIP 324\n"
+        "           \"d\" - DOG_MODE: $DOG Mode peer (preferential peering)\n"
         "           \"u\" - UNKNOWN: unrecognized bit flag\n"
         "  v        Version of transport protocol used for the connection\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"

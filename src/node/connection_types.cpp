@@ -22,6 +22,8 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "addr-fetch";
     case ConnectionType::PRIVATE_BROADCAST:
         return "private-broadcast";
+    case ConnectionType::DOG_MODE:
+        return "dog";
     } // no default case, so the compiler can warn about missing cases
 
     assert(false);
