@@ -143,7 +143,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
     def test_sigops_package(self):
         self.log.info("Test a overly-large sigops-vbyte hits package limits")
-        # Make a 2-transaction package which fails vbyte checks even though
+        # Make a chain of transactions which fails vbyte checks even though
         # separately they would work.
         self.restart_node(0, extra_args=["-bytespersigop=5000","-permitbaremultisig=1"])
 
@@ -156,11 +156,25 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             tx.vout.append(CTxOut(amount_for_bare, keys_to_multisig_script([pubkey], k=1)))
             tx.vout[0].nValue -= amount_for_bare
             tx_utxo["txid"] = tx.txid_hex
-            tx_utxo["value"] -= Decimal("0.00005000")
+            tx_utxo["value"] -= Decimal("0.00050000")  # amount_for_bare was subtracted from the main output
             return (tx_utxo, tx)
 
-        tx_parent_utxo, tx_parent = create_bare_multisig_tx()
-        _tx_child_utxo, tx_child = create_bare_multisig_tx(tx_parent_utxo)
+        # Each parent transaction has a sigop-adjusted vsize of 100,000 vbytes.
+        # A child spending from all of them forms a cluster exceeding the
+        # default cluster size limit of 976,000 vbytes (the child itself is tiny).
+        num_parents = 10
+        parent_utxos = []
+        txs = []
+        for _ in range(num_parents):
+            parent_utxo, tx = create_bare_multisig_tx()
+            parent_utxos.append(parent_utxo)
+            txs.append(tx)
+        tx_parent = txs[0]
+
+        # The child spends the parents' regular outputs, so it has no sigops of
+        # its own and only exceeds limits in the *package* context.
+        tx_child = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos)["tx"]
+        txs.append(tx_child)
 
         # Separately, the parent tx is ok
         parent_individual_testres = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex()])[0]
@@ -170,17 +184,18 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # But together, it's exceeding limits in the *package* context. If sigops adjusted vsize wasn't being checked
         # here, it would get further in validation and give too-large-cluster error instead.
-        packet_test = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex(), tx_child.serialize().hex()])
+        packet_test = self.nodes[0].testmempoolaccept([tx.serialize().hex() for tx in txs])
         expected_package_error = "too-large-cluster"
-        assert_equal([x["package-error"] for x in packet_test], [expected_package_error] * 2)
+        assert_equal([x["package-error"] for x in packet_test], [expected_package_error] * len(txs))
 
-        # When we actually try to submit, the parent makes it into the mempool, but the child would exceed cluster vsize limits
-        res = self.nodes[0].submitpackage([tx_parent.serialize().hex(), tx_child.serialize().hex()])
+        # When we actually try to submit, the parents make it into the mempool, but the child would exceed cluster vsize limits
+        res = self.nodes[0].submitpackage([tx.serialize().hex() for tx in txs])
         assert "too-large-cluster" in res["tx-results"][tx_child.wtxid_hex]["error"]
-        assert tx_parent.txid_hex in self.nodes[0].getrawmempool()
+        for tx in txs[:-1]:
+            assert tx.txid_hex in self.nodes[0].getrawmempool()
 
         # Transactions are tiny in weight
-        assert_greater_than(2000, tx_parent.get_weight() + tx_child.get_weight())
+        assert_greater_than(2000 * len(txs), sum(tx.get_weight() for tx in txs))
 
     def test_legacy_sigops_stdness(self):
         self.log.info("Test a transaction with too many legacy sigops in its inputs is non-standard.")

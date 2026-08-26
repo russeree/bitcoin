@@ -483,7 +483,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
-        tx.vin.resize(2777);
+        // Each signed input is ~147-149 bytes (~590 WU), so 7000 inputs puts the
+        // transaction above MAX_STANDARD_TX_WEIGHT even with the smallest signatures.
+        tx.vin.resize(7000);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
             tx.vin[j].prevout.n = j;

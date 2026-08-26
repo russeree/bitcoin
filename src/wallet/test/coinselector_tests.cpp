@@ -1313,8 +1313,12 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
         /*tx_noinputs_size=*/10 + 34, // static header size + output size
         /*avoid_partial=*/false,
     };
+    // Test against a fixed max transaction weight of 400,000 WU so that the
+    // scenarios below keep working at the boundary they were designed for,
+    // independent of the (larger) policy-wide MAX_STANDARD_TX_WEIGHT.
+    cs_params.m_max_tx_weight = 400'000;
 
-    int max_weight = MAX_STANDARD_TX_WEIGHT - WITNESS_SCALE_FACTOR * (cs_params.tx_noinputs_size + cs_params.change_output_size);
+    int max_weight = 400'000 - WITNESS_SCALE_FACTOR * (cs_params.tx_noinputs_size + cs_params.change_output_size);
     {
         // Scenario 1:
         // The actor starts with 1x 50.0 BTC and 1515x 0.033 BTC (~100.0 BTC total) unspent outputs
@@ -1386,7 +1390,7 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
 
         // No results
         // 1515 inputs * 68 bytes = 103,020 bytes
-        // 103,020 bytes * 4 = 412,080 weight, which is above the MAX_STANDARD_TX_WEIGHT of 400,000
+        // 103,020 bytes * 4 = 412,080 weight, which is above the max transaction weight of 400,000
         BOOST_CHECK(!result);
     }
 }

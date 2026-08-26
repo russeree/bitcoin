@@ -459,18 +459,23 @@ class SendallTest(BitcoinTestFramework):
         self.log.info("Test that sendall fails if resulting transaction is too large")
 
         # Force the wallet to bulk-generate the addresses we'll need
-        self.wallet.keypoolrefill(1600)
+        self.wallet.keypoolrefill(15000)
 
-        # create many inputs
-        outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(1600)}
+        # Create enough inputs for the resulting transaction to exceed the
+        # 3,900,000 WU maximum standard transaction weight (each signed
+        # P2WPKH input weighs ~272 WU)
+        outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(15000)}
         self.def_wallet.sendmany(amounts=outputs)
         self.generate(self.nodes[0], 1)
 
+        # Use a low fee rate so the (large) fee stays below the default
+        # -maxtxfee and the transaction size limit is hit instead.
         assert_raises_rpc_error(
                 -4,
                 "Transaction too large.",
                 self.wallet.sendall,
-                recipients=[self.remainder_target])
+                recipients=[self.remainder_target],
+                options={"fee_rate": 1})
 
     def run_test(self):
         self.nodes[0].createwallet("activewallet")

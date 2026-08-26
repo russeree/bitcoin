@@ -117,7 +117,7 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
     // Subtract 4 because BulkTransaction rounds up and we must avoid going over the weight limit early.
     static constexpr node::TxOrphanage::Usage LARGE_TX_WEIGHT{TOTAL_USAGE_LIMIT / NUM_UNIQUE_TXNS - 4};
     static_assert(LARGE_TX_WEIGHT >= TINY_TX_WEIGHT * 2, "Tx is too small, increase NUM_PEERS");
-    // The orphanage does not permit any transactions larger than 400'000, so this test will not work if the large tx is much larger.
+    // The orphanage does not permit any transactions larger than MAX_STANDARD_TX_WEIGHT, so this test will not work if the large tx is much larger.
     static_assert(LARGE_TX_WEIGHT <= MAX_STANDARD_TX_WEIGHT, "Tx is too large, decrease NUM_PEERS");
 
     FastRandomContext det_rand{true};

@@ -540,26 +540,30 @@ class WalletSendTest(BitcoinTestFramework):
         wallet = self.nodes[1].get_wallet_rpc("test_weight_limits")
 
         # Generate future inputs; 272 WU per input (273 when high-s).
-        # Picking 1471 inputs will exceed the max standard tx weight.
+        # Picking 14499 inputs will exceed the 3,900,000 WU max standard tx weight.
+        # Use a low fee rate so the (large) fee of the resulting ~1 MvB
+        # transaction stays below the default -maxtxfee.
+        # The outputs must be segwit (bech32) so that the ~15k-output funding
+        # transaction stays under the per-tx sigops standardness limit.
         outputs = []
-        for _ in range(1472):
-            outputs.append({wallet.getnewaddress(address_type="legacy"): 0.1})
+        for _ in range(14500):
+            outputs.append({wallet.getnewaddress(address_type="bech32"): 0.1})
         self.nodes[0].send(outputs=outputs)
         self.generate(self.nodes[0], 1)
 
         # 1) Try to fund transaction only using the preset inputs
         inputs = wallet.listunspent()
         assert_raises_rpc_error(-4, "Transaction too large",
-                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}], options={"inputs": inputs, "add_inputs": False})
+                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 14499}], options={"inputs": inputs, "add_inputs": False, "fee_rate": 1})
 
         # 2) Let the wallet fund the transaction
         assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
-                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}])
+                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 14499}], options={"fee_rate": 1})
 
         # 3) Pre-select some inputs and let the wallet fill-up the remaining amount
         inputs = inputs[0:1000]
         assert_raises_rpc_error(-4, "The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
-                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}], options={"inputs": inputs, "add_inputs": True})
+                                wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 14499}], options={"inputs": inputs, "add_inputs": True, "fee_rate": 1})
 
         self.nodes[1].unloadwallet("test_weight_limits")
 

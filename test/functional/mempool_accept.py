@@ -325,7 +325,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
         tx = tx_from_hex(raw_tx_reference)
         output_p2sh_burn = CTxOut(nValue=540, scriptPubKey=script_to_p2sh_script(b'burn'))
-        num_scripts = 100000 // len(output_p2sh_burn.serialize())  # Use enough outputs to make the tx too large for our policy
+        num_scripts = (int(MAX_STANDARD_TX_WEIGHT / 4) + 1000) // len(output_p2sh_burn.serialize())  # Use enough outputs to make the tx too large for our policy
         tx.vout = [output_p2sh_burn] * num_scripts
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'tx-size'}],

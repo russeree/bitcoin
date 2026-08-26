@@ -161,17 +161,18 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
     @check_package_limits
     def test_desc_size_limits(self):
-        """Create 3 mempool transactions and 2 package transactions (21KvB each):
+        """Create 3 mempool transactions and 2 package transactions (196KvB each):
               Ma
              ^ ^
             Mb  Mc
            ^     ^
           Pd      Pe
         The top ancestor in the package exceeds descendant size limits but only if the in-mempool
-        and in-package descendants are all considered together.
+        and in-package descendants are all considered together. (The cluster is 5x196=980 KvB,
+        exceeding the 976 KvB default cluster size limit.)
         """
         node = self.nodes[0]
-        target_vsize = 21_000
+        target_vsize = 196_000
         high_fee = 10 * target_vsize  # 10 sats/vB
         self.log.info("Check that in-mempool and in-package descendant sizes are calculated properly in packages")
         # Top parent in mempool, Ma

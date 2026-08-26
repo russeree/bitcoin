@@ -1260,8 +1260,10 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit.append(CTxInWitness())
 
         # Add too-large for IsStandard witness and check that it does not enter reject filter
+        # (must exceed the 3,900,000 WU max standard tx weight while staying
+        # under the 4 MB p2p message limit)
         p2sh_script = CScript([OP_TRUE])
-        witness_script2 = CScript([b'a' * 400000])
+        witness_script2 = CScript([b'a' * 3910000])
         tx3.vout.append(CTxOut(tx2.vout[0].nValue - 1000, script_to_p2sh_script(p2sh_script)))
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_script2]
 
