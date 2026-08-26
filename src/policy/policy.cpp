@@ -29,16 +29,12 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // which has units satoshis-per-kilobyte.
     // If you'd pay more in fees than the value of the output
     // to spend something, then we consider it dust.
-    // A typical spendable non-segwit txout is 34 bytes big, and will
-    // need a CTxIn of at least 148 bytes to spend:
-    // so dust is a spendable txout less than
-    // 182*dustRelayFee/1000 (in satoshis).
-    // 546 satoshis at the default rate of 3000 sat/kvB.
-    // A typical spendable segwit P2WPKH txout is 31 bytes big, and will
-    // need a CTxIn of at least 67 bytes to spend:
-    // so dust is a spendable txout less than
-    // 98*dustRelayFee/1000 (in satoshis).
-    // 294 satoshis at the default rate of 3000 sat/kvB.
+    //
+    // $DOG Mode: the dust limit is a global 1 satoshi for all spendable
+    // output types; only zero-value outputs are considered dust. The
+    // fee-rate-based computation is retained so that -dustrelayfee can only
+    // lower the dust limit further (0 disables it entirely), but never raise
+    // it above 1 satoshi.
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
@@ -59,7 +55,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
         nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
     }
 
-    return dustRelayFeeIn.GetFee(nSize);
+    return std::min(dustRelayFeeIn.GetFee(nSize), CAmount{1});
 }
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)

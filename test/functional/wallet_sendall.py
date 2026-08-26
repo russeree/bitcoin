@@ -158,11 +158,14 @@ class SendallTest(BitcoinTestFramework):
         assert_raises_rpc_error(-6, "Insufficient funds for fees after creating specified outputs.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance}, self.remainder_target])
         assert_raises_rpc_error(-8, "Specified output amount to {} is below dust threshold".format(self.recipient),
-                self.wallet.sendall, [{self.recipient: 0.00000001}, self.remainder_target])
+                self.wallet.sendall, [{self.recipient: 0}, self.remainder_target])
         assert_raises_rpc_error(-6, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance - fee}, self.remainder_target])
-        assert_raises_rpc_error(-6, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
-                [{self.recipient: pre_sendall_balance - fee - Decimal(0.00000010)}, self.remainder_target])
+        # With the global 1 sat dust limit, a remainder of 1 sat is viable and must be created
+        tx = self.wallet.sendall(recipients=[{self.recipient: pre_sendall_balance - fee - Decimal("0.00000001")}, self.remainder_target], add_to_wallet=False)
+        decoded_tx = self.wallet.decoderawtransaction(tx["hex"])
+        remainder_vout = next(o for o in decoded_tx["vout"] if o["scriptPubKey"].get("address") == self.remainder_target)
+        assert_equal(remainder_vout["value"], Decimal("0.00000001"))
 
     # @cleanup not needed because different wallet used
     def sendall_negative_effective_value(self):

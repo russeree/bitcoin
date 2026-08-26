@@ -333,7 +333,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0] = output_p2sh_burn
-        tx.vout[0].nValue -= 1  # Make output smaller, such that it is dust for our policy
+        tx.vout[0].nValue = 0  # Make output zero-valued, such that it is dust for our policy (1 sat dust limit)
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'dust'}],
             rawtxs=[tx.serialize().hex()],

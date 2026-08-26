@@ -44,13 +44,14 @@ class DustRelayFeeTest(BitcoinTestFramework):
 
     def test_dust_output(self, node: TestNode, dust_relay_fee: Decimal,
                          output_script: CScript, type_desc: str) -> None:
-        # determine dust threshold (see `GetDustThreshold`)
+        # determine dust threshold (see `GetDustThreshold`); the fee-rate-based
+        # threshold is capped at a global limit of 1 sat
         if output_script[0] == OP_RETURN:
             dust_threshold = 0
         else:
             tx_size = len(CTxOut(nValue=0, scriptPubKey=output_script).serialize())
             tx_size += 67 if output_script.IsWitnessProgram() else 148
-            dust_threshold = int(get_fee(tx_size, dust_relay_fee) * COIN)
+            dust_threshold = min(int(get_fee(tx_size, dust_relay_fee) * COIN), 1)
         self.log.info(f"-> Test {type_desc} output (size {len(output_script)}, limit {dust_threshold})")
 
         # amount right on the dust threshold should pass
@@ -94,8 +95,11 @@ class DustRelayFeeTest(BitcoinTestFramework):
         assert sweep_txid in mempool_entries
         assert_equal(len(mempool_entries), 2)
 
-        # Wipe extra arg to reset dust relay
+        # Wipe extra arg to reset dust relay. Under the global 1 sat dust limit
+        # the 1-sat outputs are not dust, so the persisted transactions are
+        # still valid after the restart; mine a block to clear the mempool.
         self.restart_node(0, extra_args=[])
+        self.generate(self.nodes[0], 1)
 
         assert_equal(self.nodes[0].getrawmempool(), [])
 

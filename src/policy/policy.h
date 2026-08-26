@@ -66,7 +66,9 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
  * Changing the dust limit changes which transactions are
  * standard and should be done with care and ideally rarely. It makes sense to
  * only increase the dust limit after prior releases were already not creating
- * outputs below the new threshold */
+ * outputs below the new threshold.
+ * Note: $DOG Mode caps the dust threshold at a global limit of 1 satoshi,
+ * so this feerate can only lower the dust limit further (see GetDustThreshold). */
 static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{100};
