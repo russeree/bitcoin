@@ -1124,7 +1124,11 @@ public:
         m_max_automatic_connections = connOptions.m_max_automatic_connections;
         m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
-        m_max_outbound_dog_mode = connOptions.m_max_outbound_dog_mode;
+        // Clamp dog mode connections against the budget remaining after the
+        // other outbound slots, like the block-relay counter above, instead
+        // of trusting the caller-provided value.
+        m_max_outbound_dog_mode = std::min(connOptions.m_max_outbound_dog_mode,
+                                           std::max(0, m_max_automatic_connections - m_max_outbound_full_relay - m_max_outbound_block_relay - m_max_feeler));
         m_max_automatic_outbound = m_max_outbound_full_relay + m_max_outbound_block_relay + m_max_feeler + m_max_outbound_dog_mode;
         m_max_inbound = std::max(0, m_max_automatic_connections - m_max_automatic_outbound);
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;

@@ -47,6 +47,13 @@ struct ConnmanTestMsg : public CConnman {
         m_peer_connect_timeout = timeout;
     }
 
+    int GetMaxOutboundFullRelay() const { return m_max_outbound_full_relay; }
+    int GetMaxOutboundBlockRelay() const { return m_max_outbound_block_relay; }
+    int GetMaxOutboundDogMode() const { return m_max_outbound_dog_mode; }
+    int GetMaxFeeler() const { return m_max_feeler; }
+    int GetMaxAutomaticOutbound() const { return m_max_automatic_outbound; }
+    int GetMaxInbound() const { return m_max_inbound; }
+
     void ResetAddrCache();
     void ResetMaxOutboundCycle();
     /// Reset the internal state.
